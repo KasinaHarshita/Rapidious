@@ -1,8 +1,8 @@
 import React from 'react';
 import bgImg from '../../assets/website/vector3.jpg';
-import Food1 from '../../assets/biryani/biryani2.jpeg';
+import Food1 from '../../assets/biryani/biryani5.jpg';
 import Food2 from '../../assets/biryani/biryani3.jpeg';
-import Food3 from '../../assets/biryani/biryani5.jpg';
+import Food3 from '../../assets/biryani/biryani2.jpeg';
 
 const ImageList = [
   {
@@ -43,10 +43,30 @@ const Hero = () => {
             <p className='text-sm'>
               Lorem ipsum dolor sit amet, consectetur adipisicing elit. Id cum corrupti repellendus illum voluptatem, vero dolorem quaerat nisi iste nihil animi veniam esse rerum. Non iusto sit tempore sed eaque.
             </p>
+            <div>
+              <button className='bg-gradient-to-r from-primary to-secondary text-white px-4 py-2 rounded-full hover:scale-105 duration-200'>Order Now</button>
+            </div>
           </div>
           {/* Image section  */}
-          <div>
-
+          <div className='order-1 sm:order-2 min-h-[450px] sm:min-h-[450px] flex justify-center items-center relative'>
+            {/* main image section */}
+            <div className='flex justify-center items-center h-[300px] sm:h-[450px] overflow-hidden'>
+              <img src={imageId} alt="" className='w-[300px] sm:w-[450px] mx-auto spin'/>
+            </div>
+            {/* image list section */}
+            <div className='flex lg:flex-col lg:top-1/2 lg:-translate-y-1/2 lg:py-2 justify-center gap-4 absolute bottom-[0px] lg:-right-10 bg-white/30 rounded-full'>
+              {
+                ImageList.map((item) => (
+                  <img key={item.id} src={item.img} className='max-w-[80px] h-[80px] object-contain inline-block hover:scale-105 duration-200' onClick={
+                    () => {
+                      setImageId(
+                      item.id === 1 ? Food1: item.id === 2 ? Food2 : Food3
+                      );
+                    }
+                  }/>
+                ))
+              }
+            </div>
           </div>
         </div>
       </div>
