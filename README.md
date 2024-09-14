@@ -79,11 +79,104 @@
     },
     "tagline" : "The OpenSearch Project: https://opensearch.org/"
   }
-
+  - Indexing is mentioned as a part of Backend Development
 
 3) **Backend Development**
-   - For this, I have decided to go with FastAPI due to its efficiency and speed for building RESTful APIs. FastAPI is modern, asynchronous, and has excellent performance, making it well-suited for handling both     small and large-scale APIs. It also has great integration capabilities with search engines like OpenSearch.
-   - For this, I have installed PostgreSQL to store the data. I installed the software but the psql.exe file was missing in my bin folder so I couldn't proceed further.
-   - Then I proceeded with FastAPI and ran the following command in the command prompt pip install fastapi uvicorn opensearch-py
-   - I made a folder which consists of the following files: main.py, routes.py, models.py, databse.py
-   - Then I typed the codes into the files which can be seen on the Repository
+ - For this, I have decided to go with FastAPI due to its efficiency and speed for building RESTful APIs. FastAPI is modern, asynchronous, and has excellent performance, making it well-suited for handling both     small and large-scale APIs. It also has great integration capabilities with search engines like OpenSearch.
+ - For this, I have installed PostgreSQL to store the data. I installed the software but the psql.exe file was missing in my bin folder so I couldn't proceed further.
+ - Then I proceeded with FastAPI and ran the following command in the command prompt pip install fastapi uvicorn opensearch-py for required dependencies
+ - I made a folder which consists of the following files: main.py, routes.py, models.py, databse.py
+ - Then I typed the codes into the files which can be seen on the Repository
+ - I typed this command in the command prompt uvicorn app.main:app --reload to run the FastAPI over uvicorn
+ - Then I installed the required dependencies pip install fastapi uvicorn psycopg2-binary opensearch-py
+ - Then I types the following code in psycopg2.py to setup the connection to PostgreSQL
+ import psycopg2
+  def get_db_connection():
+      conn = psycopg2.connect(
+          dbname="recipes_db",
+          user="your_user",
+          password="your_password",
+          host="localhost",
+          port="5432"
+      )
+      return conn
+  - Then I went ahead with the integration of OpenSearch and PostgreSQL. This was done in 2 stages: Store Recipes in PostgreSQL and Index Recipes in OpenSearch
+  - Then I typed the following code into the main.py to Inserting Data into PostgreSQL and Indexing in OpenSearch:
+  import psycopg2
+  from fastapi import FastAPI
+  from opensearchpy import OpenSearch
+  
+  app = FastAPI()
+  
+  # Function to insert recipe into PostgreSQL
+  def insert_recipe_into_postgres(recipe_name, ingredients, cuisine, prep_time):
+      conn = get_db_connection()
+      cursor = conn.cursor()
+      query = """INSERT INTO recipes (recipe_name, ingredients, cuisine, prep_time) 
+                 VALUES (%s, %s, %s, %s) RETURNING id;"""
+      cursor.execute(query, (recipe_name, ingredients, cuisine, prep_time))
+      recipe_id = cursor.fetchone()[0]
+      conn.commit()
+      cursor.close()
+      conn.close()
+      return recipe_id
+  
+  # Function to index recipe in OpenSearch
+  def index_recipe_in_opensearch(recipe_id, recipe_name, ingredients, cuisine, prep_time):
+      client = get_opensearch_client()
+      document = {
+          "id": recipe_id,
+          "recipe_name": recipe_name,
+          "ingredients": ingredients,
+          "cuisine": cuisine,
+          "prep_time": prep_time
+      }
+      client.index(index="recipes", id=recipe_id, body=document)
+  
+  @app.post("/recipes/")
+  def create_recipe(recipe_name: str, ingredients: str, cuisine: str, prep_time: int):
+      # Step 1: Insert the recipe into PostgreSQL
+      recipe_id = insert_recipe_into_postgres(recipe_name, ingredients, cuisine, prep_time)
+      
+      # Step 2: Index the recipe in OpenSearch for searching
+      index_recipe_in_opensearch(recipe_id, recipe_name, ingredients, cuisine, prep_time)
+  
+      return {"message": "Recipe created successfully", "recipe_id": recipe_id}
+  - Then I typed the following code into routes.py for Searching Recipes Using OpenSearch:
+  @app.get("/recipes/search/")
+async def search_recipes(query: str, ingredients: str = None, cuisine: str = None, prep_time: int = None):
+    client = get_opensearch_client()
+    search_query = {
+        "query": {
+            "bool": {
+                "must": [{"match": {"recipe_name": query}}],
+                "filter": []
+            }
+        }
+    }
+
+    # Apply filters if they are provided
+    if ingredients:
+        search_query["query"]["bool"]["filter"].append({"term": {"ingredients": ingredients}})
+    if cuisine:
+        search_query["query"]["bool"]["filter"].append({"term": {"cuisine": cuisine}})
+    if prep_time:
+        search_query["query"]["bool"]["filter"].append({"range": {"prep_time": {"lte": prep_time}}})
+
+    response = client.search(index="recipes", body=search_query)
+    
+    # Returning just the IDs and recipe names for simplicity
+    recipes = [{"id": hit["_id"], "recipe_name": hit["_source"]["recipe_name"]} for hit in response["hits"]["hits"]]
+
+    return recipes
+  -  Then I wrote a simple SQL structure in PostgreSQL:
+  CREATE TABLE recipes (
+    id SERIAL PRIMARY KEY,
+    recipe_name VARCHAR(255),
+    ingredients TEXT,
+    cuisine VARCHAR(100),
+    prep_time INT );
+  - Though I was not able to complete the entire process, this was my work flow and I have learned a lot during the process.
+
+  
+
