@@ -1,0 +1,13 @@
+import json
+
+json_file = 'epirecipes.json'
+bulk_file = 'epirecipes_bulk.json'
+
+with open(json_file, 'r') as f:
+    data = json.load(f)
+
+with open(bulk_file, 'w') as f:
+    for i, doc in enumerate(data):
+        action = {"index": {"_index": "epirecipes_index", "_id": i + 1}}
+        f.write(json.dumps(action) + '\n')
+        f.write(json.dumps(doc) + '\n')
