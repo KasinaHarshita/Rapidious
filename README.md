@@ -35,6 +35,7 @@
   git add .
   git commit -m "initial changes"
   git push origin main
+  - The website can be viewed on a any device.
 
 
 2) **OpenSearch Installation and Setup**
