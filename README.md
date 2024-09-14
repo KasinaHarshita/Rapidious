@@ -155,7 +155,7 @@ async def search_recipes(query: str, ingredients: str = None, cuisine: str = Non
         }
     }
 
-    # Apply filters if they are provided
+  # Apply filters if they are provided
     if ingredients:
         search_query["query"]["bool"]["filter"].append({"term": {"ingredients": ingredients}})
     if cuisine:
@@ -165,7 +165,7 @@ async def search_recipes(query: str, ingredients: str = None, cuisine: str = Non
 
     response = client.search(index="recipes", body=search_query)
     
-    # Returning just the IDs and recipe names for simplicity
+  # Returning just the IDs and recipe names for simplicity
     recipes = [{"id": hit["_id"], "recipe_name": hit["_source"]["recipe_name"]} for hit in response["hits"]["hits"]]
 
     return recipes
